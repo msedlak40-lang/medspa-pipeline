@@ -1,0 +1,6 @@
+/.venv/
+/output/
+/__pycache__/
+/input/*.xlsx
+/input/*.csv
+*.pyc
