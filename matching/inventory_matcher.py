@@ -149,15 +149,27 @@ def confirm_mapping(conn, qb_item_name, emr_product_name):
             (emr_product_name,),
         ).fetchone()
         if emr_row:
+            keep_id = existing[0]
+            remove_id = emr_row[0]
             conn.execute(
                 """UPDATE inventory_items
                    SET sku = COALESCE(sku, ?), category = COALESCE(category, ?),
                        selling_price = COALESCE(selling_price, ?),
                        updated_at = CURRENT_TIMESTAMP
                    WHERE item_id = ?""",
-                (emr_row[1], emr_row[2], emr_row[3], existing[0]),
+                (emr_row[1], emr_row[2], emr_row[3], keep_id),
             )
-            conn.execute("DELETE FROM inventory_items WHERE item_id = ?", (emr_row[0],))
+            # Reassign child rows before deleting the duplicate
+            for child_table, fk_col in [
+                ("inventory_snapshots", "item_id"),
+                ("inventory_transactions", "item_id"),
+                ("service_product_mapping", "item_id"),
+            ]:
+                conn.execute(
+                    f"UPDATE {child_table} SET {fk_col} = ? WHERE {fk_col} = ?",
+                    (keep_id, remove_id),
+                )
+            conn.execute("DELETE FROM inventory_items WHERE item_id = ?", (remove_id,))
     else:
         # No QB row, update the EMR row with the QB name
         conn.execute(
