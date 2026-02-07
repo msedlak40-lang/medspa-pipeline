@@ -49,6 +49,11 @@ Thumbs.db
 # DO NOT commit raw EMR / Gravity files
 input/*.xlsx
 input/*.csv
+state/*.csv
+state/*.xlsx
+state/posted_ledger.csv
+state/*.db
+state/*.json
 
 # But allow you to track any template docs you might add later
 !input/README.md
